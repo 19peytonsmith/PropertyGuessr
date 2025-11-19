@@ -17,7 +17,7 @@
 /.next/
 /out/
 
-# Ignore Next build output in subfolders (e.g. zillowguessr/.next)
+# Ignore Next build output in subfolders (e.g. propertyguessr/.next)
 **/.next/
 
 # Ignore node_modules anywhere (root and subfolders)

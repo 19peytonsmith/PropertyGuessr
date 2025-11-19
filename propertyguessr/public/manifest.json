@@ -1,6 +1,6 @@
 {
-  "short_name": "Zillow Guessr",
-  "name": "Zillow Guessing Game",
+  "short_name": "Property Guessr",
+  "name": "Property Guessing Game",
   "icons": [
     {
       "src": "home.ico",

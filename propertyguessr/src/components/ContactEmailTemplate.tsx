@@ -24,7 +24,7 @@ export const ContactEmailTemplate: React.FC<
     <Body style={main}>
       <Container style={container}>
         <Section style={header}>
-          <Heading style={headerTitle}>🏠 New ZillowGuessr Feedback</Heading>
+          <Heading style={headerTitle}>🏠 New PropertyGuessr Feedback</Heading>
           <Text style={headerSubtitle}>
             You have received a new message from your contact form
           </Text>
@@ -61,7 +61,7 @@ export const ContactEmailTemplate: React.FC<
         </Section>
         <Section style={footer}>
           <Text style={footerText}>
-            This email was sent from the ZillowGuessr contact form.
+            This email was sent from the PropertyGuessr contact form.
             <br />
             Reply directly to this email to respond to {name}.
           </Text>

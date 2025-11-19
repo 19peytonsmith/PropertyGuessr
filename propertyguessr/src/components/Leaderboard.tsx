@@ -124,7 +124,7 @@ export default function Leaderboard() {
   // load the local client id to mark "(You)" in global list
   useEffect(() => {
     try {
-      const id = localStorage.getItem("zillow_clientId");
+      const id = localStorage.getItem("property_clientId");
       setLocalClientId(id);
     } catch {
       setLocalClientId(null);

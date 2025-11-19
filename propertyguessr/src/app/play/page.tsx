@@ -161,7 +161,7 @@ export default function PlayPage() {
   useEffect(() => {
     // initialize client id (4-digit) persisted per browser/device
     try {
-      const key = "zillow_clientId";
+      const key = "property_clientId";
       let id = null;
       if (typeof window !== "undefined") id = localStorage.getItem(key);
       if (!id) {

@@ -78,11 +78,11 @@ export default function SplashPage() {
         </div>
 
         <div className="relative z-10">
-          <h1 className="splash-title">ZillowGuessr</h1>
+          <h1 className="splash-title">PropertyGuessr</h1>
         </div>
 
         <p className="splash-lead relative z-10 bg-black/25 text-white rounded-lg px-4 py-3 max-w-3xl mx-auto">
-          ZillowGuessr is a GeoGuessr-inspired game where you&apos;re shown 5
+          PropertyGuessr is a GeoGuessr-inspired game where you&apos;re shown 5
           random homes — complete with photos and details — and your challenge
           is simple: guess the price!
         </p>
@@ -91,7 +91,7 @@ export default function SplashPage() {
           <Link
             href="/play"
             className={`play-btn backdrop-blur-xs ${isLoadingPlay ? "loading" : ""}`}
-            aria-label="Play ZillowGuessr"
+            aria-label="Play PropertyGuessr"
             onClick={() => setIsLoadingPlay(true)}
           >
             <span className="play-text">
@@ -173,7 +173,7 @@ export default function SplashPage() {
           <div className="links flex gap-2 items-center">
             <a
               className="icon-link theme-like backdrop-blur-xs"
-              href="https://github.com/19peytonsmith/ZillowGuessr"
+              href="https://github.com/19peytonsmith/PropertyGuessr"
               target="_blank"
               rel="noreferrer noopener"
               aria-label="GitHub repository link"
@@ -231,7 +231,7 @@ export default function SplashPage() {
 
                 <div className="mt-3">
                   <p>
-                    ZillowGuessr is a small, educational project that shows a
+                    PropertyGuessr is a small, educational project that shows a
                     set of publicly listed homes and asks players to guess their
                     listed price. The homes displayed are gathered by a
                     background service that continuously finds public listing

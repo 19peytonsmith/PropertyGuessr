@@ -17,8 +17,8 @@ const lexendExa = Lexend_Exa({
 });
 
 export const metadata: Metadata = {
-  title: "ZillowGuessr",
-  description: "The game where you guess the price of Zillow listings!",
+  title: "PropertyGuessr",
+  description: "The game where you guess the price of property listings!",
 };
 
 export default function RootLayout({

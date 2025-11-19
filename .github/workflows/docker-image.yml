@@ -26,4 +26,4 @@ jobs:
           context: .
           file: Dockerfile.dev
           push: true
-          tags: 19peytonsmith/zillowguessr:latest
+          tags: 19peytonsmith/propertyguessr:latest
