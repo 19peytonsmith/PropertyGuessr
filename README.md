@@ -4,7 +4,7 @@ PropertyGuessr is a small Next.js web app that turns browsing property listings 
 
 ## Production Site
 
-Now officially released at [https://propertyguessr.vercel.app/](https://propertyguessr.vercel.app/)!
+Now officially released at [https://propertyguessr.vercel.app](https://propertyguessr.vercel.app/)!
 
 ## Quick overview
 
