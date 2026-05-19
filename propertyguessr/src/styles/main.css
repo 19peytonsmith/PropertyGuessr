@@ -546,8 +546,8 @@ html:not([data-theme="dark"]) .leaderboard-container .maple-leaf-icon {
 /* Improve splash title layout on small screens */
 @media (max-width: 768px) {
   .splash-title {
-    font-size: clamp(32px, 10vw, 60px);
-    padding: 8px 12px !important;
+    font-size: clamp(32px, 8vw, 60px);
+    padding: 0px !important;
     text-align: center;
     width: 100%;
     box-sizing: border-box;
