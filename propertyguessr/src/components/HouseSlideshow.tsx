@@ -2,24 +2,26 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import imageLoader from "@/lib/imageLoader";
 
 export default function HouseSlideshow() {
   const [currentImage, setCurrentImage] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  // WebP, because these are served straight from /public without an optimizer.
   const images = [
-    "/assets/HouseHomePage1.png",
-    "/assets/HouseHomePage2.png",
-    "/assets/HouseHomePage3.png",
-    "/assets/HouseHomePage4.png",
-    "/assets/HouseHomePage5.png",
-    "/assets/HouseHomePage6.png",
-    "/assets/HouseHomePage7.png",
-    "/assets/HouseHomePage8.png",
-    "/assets/HouseHomePage9.png",
-    "/assets/HouseHomePage10.png",
-    "/assets/HouseHomePage11.png",
-    "/assets/HouseHomePage12.png",
+    "/assets/HouseHomePage1.webp",
+    "/assets/HouseHomePage2.webp",
+    "/assets/HouseHomePage3.webp",
+    "/assets/HouseHomePage4.webp",
+    "/assets/HouseHomePage5.webp",
+    "/assets/HouseHomePage6.webp",
+    "/assets/HouseHomePage7.webp",
+    "/assets/HouseHomePage8.webp",
+    "/assets/HouseHomePage9.webp",
+    "/assets/HouseHomePage10.webp",
+    "/assets/HouseHomePage11.webp",
+    "/assets/HouseHomePage12.webp",
   ];
 
   useEffect(() => {
@@ -57,6 +59,8 @@ export default function HouseSlideshow() {
       {images.map((src, index) => (
         <Image
           key={src}
+          loader={imageLoader}
+          unoptimized
           src={src}
           alt=""
           width={1920}

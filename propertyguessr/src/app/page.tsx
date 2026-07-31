@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
+import imageLoader from "@/lib/imageLoader";
 import ThemeToggle from "@/components/ThemeToggle";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -119,6 +120,8 @@ export default function SplashPage() {
               title="Play Canada Edition"
             >
               <Image
+                loader={imageLoader}
+                unoptimized
                 src="/assets/maple-leaf.svg"
                 alt="Maple leaf"
                 className="me-2 maple-leaf-icon"

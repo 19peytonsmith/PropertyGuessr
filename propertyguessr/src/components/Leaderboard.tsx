@@ -4,6 +4,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import imageLoader from "@/lib/imageLoader";
 import Cookies from "js-cookie";
 import "../styles/leaderboard.css";
 import ThemeToggle from "./ThemeToggle";
@@ -550,6 +551,8 @@ export default function Leaderboard() {
         <span className="score-label">
           {entry.isCanada ? (
             <Image
+              loader={imageLoader}
+              unoptimized
               src="/assets/maple-leaf.svg"
               alt="Canadian score"
               className="me-1 maple-leaf-icon"
@@ -710,6 +713,8 @@ export default function Leaderboard() {
                               {/* If this score is Canadian, show the maple leaf SVG */}
                               {entry.isCanada ? (
                                 <Image
+                                  loader={imageLoader}
+                                  unoptimized
                                   src="/assets/maple-leaf.svg"
                                   alt="Canadian score"
                                   className="me-1 maple-leaf-icon"

@@ -4,8 +4,8 @@ import * as React from "react";
 import Image from "next/image";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
-import { getProxiedImageUrl } from "@/lib/imageProxy";
 import { motion } from "framer-motion";
+import imageLoader from "@/lib/imageLoader";
 
 export default function PropertyCarouselMobile({
   urls,
@@ -25,11 +25,8 @@ export default function PropertyCarouselMobile({
     onChangeIndex?.(index);
   }, [index, onChangeIndex]);
 
-  // make proxied safe if `urls` is undefined by defaulting to an empty array
-  const proxied = React.useMemo(
-    () => (urls ?? []).map((u) => getProxiedImageUrl(u)),
-    [urls]
-  );
+  // stay safe if `urls` is undefined by defaulting to an empty array
+  const images = React.useMemo(() => urls ?? [], [urls]);
 
   const prev = React.useCallback(() => {
     setIndex((i) => (i - 1 + urls.length) % Math.max(1, urls.length));
@@ -49,9 +46,9 @@ export default function PropertyCarouselMobile({
   // motionDivWidth = count * 100% of parent, so translating by parent widths
   // requires converting index to a percent of the motion div: (index / count)*100%.
   const slideX = React.useMemo(() => {
-    const count = proxied.length || 1;
+    const count = images.length || 1;
     return `-${(index / count) * 100}%`;
-  }, [index, proxied.length]);
+  }, [index, images.length]);
 
   // keep thumbnails scrolled to the active index when index changes
   React.useEffect(() => {
@@ -120,17 +117,17 @@ export default function PropertyCarouselMobile({
           >
             <motion.div
               className="h-full flex"
-              style={{ width: `${proxied.length * 100}%` }}
+              style={{ width: `${images.length * 100}%` }}
               // animate to a translation that's a percent of this element's own width
               // so one index moves exactly one parent-width.
               animate={{ x: slideX }}
               transition={{ duration: 0.28, ease: [0.22, 0.8, 0.2, 1] }}
             >
-              {proxied.map((p, i) => (
+              {images.map((p, i) => (
                 <PhotoView key={i} src={urls[i]}>
                   <div
                     className="w-full h-full relative flex-shrink-0"
-                    style={{ width: `${100 / Math.max(1, proxied.length)}%` }}
+                    style={{ width: `${100 / Math.max(1, images.length)}%` }}
                   >
                     <button
                       aria-label={`Open image ${i + 1}`}
@@ -145,6 +142,7 @@ export default function PropertyCarouselMobile({
                     >
                       <div className="w-full h-full relative">
                         <Image
+                          loader={imageLoader}
                           src={p}
                           alt={`Property image ${i + 1}`}
                           fill
@@ -187,7 +185,7 @@ export default function PropertyCarouselMobile({
             ref={thumbsRef}
             className="mt-3 flex items-center gap-2 overflow-x-auto pb-2"
           >
-            {proxied.map((p, i) => (
+            {images.map((p, i) => (
               <button
                 key={i}
                 data-thumb-index={i}
@@ -197,6 +195,7 @@ export default function PropertyCarouselMobile({
                 className={`flex-shrink-0 rounded-md overflow-hidden border-2 ${i === index ? "border-[var(--btn-primary)]" : "border-transparent"} w-[80px] h-[60px]`}
               >
                 <Image
+                  loader={imageLoader}
                   src={p}
                   alt={`Thumb ${i + 1}`}
                   width={80}
