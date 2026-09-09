@@ -569,7 +569,7 @@ export default function PlayPage() {
 
   return (
     <div className="mx-auto my-auto flex">
-      <Confetti active={showConfetti} duration={3000} />
+      <Confetti active={showConfetti} />
       {currentData ? (
         <div className="main-content p-4 mx-auto relative bg-[var(--card-bg)]">
           <div className="play-page-header flex justify-between items-center mb-1">
