@@ -2,10 +2,12 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Orbitron } from "next/font/google";
-import type { SliderProps } from "@mui/material/Slider";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import PropertySlider from "@/components/PropertySlider";
+import { TextMorph } from "torph/react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { positionAt, priceAt } from "@/lib/price";
 import PropertyCarousel from "@/components/PropertyCarousel";
 import SubmitButton from "@/components/SubmitButton";
 import Rounds from "@/components/Rounds";
@@ -21,9 +23,26 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ThemeToggle from "@/components/ThemeToggle";
 import "@/styles/app.css";
+import "@/styles/bubble-slider.css";
 import "@/styles/leaderboard.css";
 
 const ROUNDS = Number(process.env.NEXT_PUBLIC_NUMBER_OF_ROUNDS) || 5;
+
+// The score climbs to its new total rather than cutting to it. The morph rolls
+// the digits between each step, so a handful of steps reads as one continuous
+// count - where the old tween had to render every number on the way.
+const SCORE_ROLL_MS = 900;
+const SCORE_STEP_MS = 120;
+const SCORE_SPRING = { stiffness: 150, damping: 19, mass: 1.2 };
+
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+// The clock reads out once a second all game, so it gets a shorter roll than
+// the score: long enough to see, short enough not to hold the eye.
+const TIMER_MORPH_MS = 180;
+
+// The property stats change once a round, on the same card.
+const STAT_MORPH_MS = 320;
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -86,49 +105,53 @@ export default function PlayPage() {
   const [lastDelta, setLastDelta] = useState<number>(0);
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   const [animatingScore, setAnimatingScore] = useState<boolean>(false);
-  const animRef = useRef<number | null>(null);
+  const rollRef = useRef<number | null>(null);
+  const reducedMotion = usePrefersReducedMotion();
   const [holdDisplayUntilAnimation, setHoldDisplayUntilAnimation] =
     useState<boolean>(false);
 
-  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-
-  const startAnimateDisplay = (from: number, to: number) => {
-    if (animRef.current) {
-      cancelAnimationFrame(animRef.current);
-      animRef.current = null;
-    }
-
-    setHoldDisplayUntilAnimation(false);
-
-    const duration = 700;
-    const start = performance.now();
+  // Stepped eight or so times across the climb rather than every frame: the
+  // morph carries the digits from one step to the next, so the count reads as
+  // continuous at a fraction of the work.
+  const revealTotal = (from: number, to: number) => {
+    if (rollRef.current) window.clearInterval(rollRef.current);
     setAnimatingScore(true);
 
-    const step = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = easeOutCubic(t);
-      const value = Math.round(from + (to - from) * eased);
-      setDisplayTotal(value);
-      if (t < 1) {
-        animRef.current = requestAnimationFrame(step);
-      } else {
-        animRef.current = null;
-        setAnimatingScore(false);
-      }
+    // The hold is what keeps the effect below from syncing the readout to the
+    // new total, so it stays on until the climb has arrived there itself.
+    const arrive = () => {
+      setDisplayTotal(to);
+      setAnimatingScore(false);
+      setHoldDisplayUntilAnimation(false);
     };
 
-    animRef.current = requestAnimationFrame(step);
+    if (reducedMotion) {
+      arrive();
+      return;
+    }
+
+    const started = performance.now();
+    rollRef.current = window.setInterval(() => {
+      const t = Math.min(1, (performance.now() - started) / SCORE_ROLL_MS);
+      if (t < 1) {
+        setDisplayTotal(Math.round(from + (to - from) * easeOutCubic(t)));
+        return;
+      }
+      if (rollRef.current) window.clearInterval(rollRef.current);
+      rollRef.current = null;
+      arrive();
+    }, SCORE_STEP_MS);
   };
 
   useEffect(() => {
-    if (!animatingScore && !holdDisplayUntilAnimation) {
+    if (!holdDisplayUntilAnimation) {
       setDisplayTotal(total);
     }
-  }, [total, animatingScore, holdDisplayUntilAnimation]);
+  }, [total, holdDisplayUntilAnimation]);
 
   useEffect(() => {
     return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
+      if (rollRef.current) window.clearInterval(rollRef.current);
     };
   }, []);
 
@@ -142,7 +165,7 @@ export default function PlayPage() {
   }, [lastDelta]);
   const [roundLocked, setRoundLocked] = useState<boolean>(false);
   const [pendingNextRound, setPendingNextRound] = useState<boolean>(false);
-  const [color, setColor] = useState<SliderProps["color"] | string>("primary");
+  const [color, setColor] = useState<string>("primary");
   const [getResults, setGetResults] = useState<boolean>(false);
   const [isLoadingResults, setIsLoadingResults] = useState<boolean>(false);
   const [showExitConfirm, setShowExitConfirm] = useState<boolean>(false);
@@ -311,30 +334,6 @@ export default function PlayPage() {
     return Math.round(1000 * Math.E ** -Math.abs(percentageError));
   };
 
-  const convertValueToSliderValue = (moneyValue: number) => {
-    if (moneyValue <= 100_000) {
-      return (moneyValue / 100_000) * 100;
-    } else if (moneyValue <= 1_000_000) {
-      return 100 + ((moneyValue - 100_000) / (1_000_000 - 100_000)) * 500;
-    } else if (moneyValue <= 5_000_000) {
-      return 600 + ((moneyValue - 1_000_000) / (5_000_000 - 1_000_000)) * 300;
-    } else {
-      return 900 + ((moneyValue - 5_000_000) / (20_000_000 - 5_000_000)) * 100;
-    }
-  };
-
-  function calculateValue(v: number) {
-    if (v <= 100) {
-      return (v / 100) * 100_000;
-    } else if (v <= 600) {
-      return 100_000 + ((v - 100) / 500) * (1_000_000 - 100_000);
-    } else if (v <= 900) {
-      return 1_000_000 + ((v - 600) / 300) * (5_000_000 - 1_000_000);
-    } else {
-      return 5_000_000 + ((v - 900) / 100) * (20_000_000 - 5_000_000);
-    }
-  }
-
   function formatDuration(ms: number | null | undefined) {
     if (ms == null || isNaN(ms)) return "0:00";
     const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -348,7 +347,7 @@ export default function PlayPage() {
       ? sliderValue[0]
       : sliderValue;
     const scoreForRound = calculateScore(
-      calculateValue(numericSlider),
+      priceAt(numericSlider),
       valueOfHome
     );
 
@@ -362,7 +361,7 @@ export default function PlayPage() {
       const updated = [...prev];
       updated[currentIndex] = [
         numericSlider,
-        convertValueToSliderValue(valueOfHome),
+        positionAt(valueOfHome),
       ];
       return updated;
     });
@@ -380,10 +379,10 @@ export default function PlayPage() {
 
     window.setTimeout(() => {
       setShowDelta(false);
-      startAnimateDisplay(prevTotal, newTotal);
+      revealTotal(prevTotal, newTotal);
     }, 600);
 
-    setSliderValue([numericSlider, convertValueToSliderValue(valueOfHome)]);
+    setSliderValue([numericSlider, positionAt(valueOfHome)]);
 
     setRoundLocked(true);
     if (currentIndex < ROUNDS - 1) {
@@ -593,7 +592,9 @@ export default function PlayPage() {
                   aria-label={`Time elapsed: ${formatDuration(elapsedMs)}`}
                   title={`Time elapsed: ${formatDuration(elapsedMs)}`}
                 >
-                  {formatDuration(elapsedMs)}
+                  <TextMorph duration={TIMER_MORPH_MS}>
+                    {formatDuration(elapsedMs)}
+                  </TextMorph>
                 </div>
                 <ThemeToggle />
               </div>
@@ -603,15 +604,24 @@ export default function PlayPage() {
             <h4>{currentData.city_state_zipcode}</h4>
             <div className="property-data flex gap-2">
               <h5 className="text-end">
-                <FontAwesomeIcon icon={faBed} /> {currentData.beds}
+                <FontAwesomeIcon icon={faBed} />{" "}
+                <TextMorph duration={STAT_MORPH_MS}>
+                  {String(currentData.beds)}
+                </TextMorph>
                 <span className="small-text">bd</span>
               </h5>
               <h5 className="text-end">
-                <FontAwesomeIcon icon={faBathtub} /> {currentData.baths}
+                <FontAwesomeIcon icon={faBathtub} />{" "}
+                <TextMorph duration={STAT_MORPH_MS}>
+                  {String(currentData.baths)}
+                </TextMorph>
                 <span className="small-text">ba</span>
               </h5>
               <h5 className="text-end">
-                <FontAwesomeIcon icon={faRuler} /> {currentData.square_footage}
+                <FontAwesomeIcon icon={faRuler} />{" "}
+                <TextMorph duration={STAT_MORPH_MS}>
+                  {String(currentData.square_footage)}
+                </TextMorph>
                 <span className="small-text">
                   ft<sup>2</sup>
                 </span>
@@ -624,11 +634,12 @@ export default function PlayPage() {
             <h5 className="m-0">
               Score{" "}
               <span className="inline-flex items-center relative d-block d-sm-inline">
-                <span
+                <TextMorph
                   className={`score-number ${animatingScore ? "anim" : ""}`}
+                  ease={SCORE_SPRING}
                 >
-                  {displayTotal}
-                </span>
+                  {String(displayTotal)}
+                </TextMorph>
                 {showDelta ? (
                   <span className={`score-delta show`}>+{lastDelta}</span>
                 ) : null}
@@ -705,7 +716,7 @@ export default function PlayPage() {
             value={sliderValue}
             onChange={handlePropertySliderOnChange}
             disabled={roundLocked}
-            color={color as SliderProps["color"]}
+            color={color}
             onSubmit={() => currentData && handleSubmit(currentData.value)}
             isCanada={isCanada}
           />

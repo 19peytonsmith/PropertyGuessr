@@ -98,15 +98,6 @@
     width: auto !important;
     max-width: none !important;
   }
-
-  /* Make slider labels smaller on small screens */
-  .MuiSlider-root .MuiSlider-markLabel {
-    font-size: 0.625rem !important;
-  }
-
-  .MuiSlider-root .MuiSlider-valueLabel {
-    font-size: 0.7rem !important;
-  }
 }
 
 /* Play page home button */
@@ -317,96 +308,6 @@ html[data-theme="dark"] .exit-confirm {
   color: var(--muted);
   font-weight: 500;
   align-self: self-end;
-}
-
-/* =================
-   MUI SLIDER OVERRIDES
-   ================= */
-
-.MuiSlider-root .MuiSlider-mark {
-  width: 2px;
-  height: 8px;
-  border-radius: 1px;
-  background-color: var(--slider-mark) !important;
-}
-
-.MuiSlider-root .MuiSlider-mark.MuiSlider-markActive {
-  background-color: var(--slider-mark-active) !important;
-}
-
-.MuiSlider-root .MuiSlider-markLabel {
-  color: var(--slider-mark-label) !important;
-  font-family: var(--font-lexend-exa);
-}
-
-.MuiSlider-root .MuiSlider-rail {
-  background-color: var(--slider-rail) !important;
-  opacity: 1 !important;
-}
-
-.MuiSlider-root .MuiSlider-track {
-  background-color: var(--slider-track) !important;
-}
-
-.MuiSlider-root .MuiSlider-thumb {
-  background-color: var(--slider-thumb) !important;
-  color: var(--slider-thumb) !important;
-  box-shadow: 0 2px 6px var(--shadow);
-  border: 2px solid var(--bg);
-  transition: none;
-}
-
-.MuiSlider-root .MuiSlider-valueLabel {
-  color: var(--bg) !important;
-  background: var(--text) !important;
-  font-family: var(--font-lexend-exa);
-}
-
-/* =================
-   PRICE INDICATORS
-   ================= */
-
-.price-indicator-animate {
-  animation: subtle-bounce-settle 520ms cubic-bezier(0.22, 0.9, 0.35, 1) both;
-}
-
-@keyframes subtle-bounce-settle {
-  0% {
-    transform: translateY(-10px) scaleY(0.995);
-    opacity: 0;
-  }
-  40% {
-    transform: translateY(3px) scaleY(1.01);
-    opacity: 1;
-  }
-  65% {
-    transform: translateY(-2px) scaleY(0.998);
-  }
-  100% {
-    transform: translateY(0) scaleY(1);
-  }
-}
-
-.price-indicator-label {
-  background: var(--card-bg);
-  border: 1px solid var(--price-chosen);
-  color: var(--price-chosen);
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  box-shadow: 0 1px 3px var(--shadow);
-  pointer-events: none;
-  transition:
-    transform 0.2s ease,
-    opacity 0.2s ease;
-  will-change: transform, opacity;
-  white-space: nowrap;
-}
-
-.price-indicator-label.actual {
-  border-color: var(--price-actual);
-  color: var(--price-actual);
 }
 
 /* =================

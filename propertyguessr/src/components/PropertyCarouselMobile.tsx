@@ -5,7 +5,11 @@ import Image from "next/image";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { motion } from "framer-motion";
+import { TextMorph } from "torph/react";
 import imageLoader from "@/lib/imageLoader";
+
+// The counter ticks on every swipe, so it rolls rather than cuts.
+const STAT_MORPH_MS = 320;
 
 export default function PropertyCarouselMobile({
   urls,
@@ -78,7 +82,9 @@ export default function PropertyCarouselMobile({
           {/* Current index indicator */}
           <div className="absolute top-2 right-2 z-30">
             <div className="px-2 py-1 rounded-md bg-white/90 text-black text-sm font-medium shadow-sm">
-              {`${index + 1}/${urls.length}`}
+              <TextMorph duration={STAT_MORPH_MS}>
+                {`${index + 1}/${urls.length}`}
+              </TextMorph>
             </div>
           </div>
           {/* Sliding gallery: place all images in a single flex row and translate
