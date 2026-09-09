@@ -630,10 +630,10 @@ export default function PlayPage() {
           </div>
 
           <hr className="my-1 my-md-3" />
-          <div className="flex items-center justify-between">
+          <div className="score-row flex items-center justify-between">
             <h5 className="m-0">
               Score{" "}
-              <span className="inline-flex items-center relative d-block d-sm-inline">
+              <span className="inline relative">
                 <TextMorph
                   className={`score-number ${animatingScore ? "anim" : ""}`}
                   ease={SCORE_SPRING}

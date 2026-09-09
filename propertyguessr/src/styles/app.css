@@ -310,6 +310,38 @@ html[data-theme="dark"] .exit-confirm {
   align-self: self-end;
 }
 
+/* The score and the map button share one row down to the narrowest phones, so
+   both give up a little size rather than the total dropping below its label. */
+@media (max-width: 640px) {
+  .score-row {
+    gap: 0.5rem;
+  }
+
+  .score-row h5 {
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
+  .score-row .score-max {
+    font-size: 0.7rem;
+  }
+
+  .score-row .btn {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  /* The delta is a flourish that floats off, and there is no width on a phone
+     to hold open for it: lifted out of flow, it cannot shove the row wider for
+     the second it shows. */
+  .score-row .score-delta {
+    position: absolute;
+    top: 0;
+    left: 100%;
+  }
+}
+
 /* =================
    MAP EMBED
    ================= */

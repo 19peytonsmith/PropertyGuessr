@@ -42,8 +42,13 @@ const stretchOf = (bob: Bob) => Math.min(Math.abs(bob.vel) * 0.006, 0.13);
 const scaleXof = (stretch: number, squash: number) =>
   (1 - stretch * 0.7) * (1 - squash);
 
-const bubbleTransform = (tilt: number, stretch: number, squash = 0) =>
-  `translateX(-50%) rotate(${tilt}deg) scale(${scaleXof(stretch, squash)}, ${1 + stretch})`;
+const bubbleTransform = (
+  tilt: number,
+  stretch: number,
+  squash = 0,
+  nudge = 0,
+) =>
+  `translateX(calc(-50% + ${nudge}px)) rotate(${tilt}deg) scale(${scaleXof(stretch, squash)}, ${1 + stretch})`;
 
 const rest = (bob: Bob) => {
   bob.lag = bob.x;
@@ -58,6 +63,39 @@ const RADIUS = 12; // px of corner rounding on the bubble, per the stylesheet
 type Box = { half: number; top: number; bottom: number };
 type Pt = { x: number; y: number };
 
+// px a bubble swung into a lean reaches past where its upright body ended. Held
+// back from the room the reveal is allowed, so the swing has somewhere to go.
+const LEAN_ROOM = 36;
+
+// Slack beside the track: whatever the slider's own padding leaves a bubble to
+// hang into at either end, less what its swing has to be able to use. Negative
+// where the swing needs more than the padding has - then the body is held inside
+// the track rather than at its edge.
+const roomAround = (track: HTMLElement, width: number, reserve: number) => {
+  const box = track.parentElement;
+  return box ? (box.clientWidth - width) / 2 - reserve : -reserve;
+};
+
+// How far the body slides off its tail to stay inside that slack. A full-width
+// track has none to give, so at the ends the bubble sits over the track and the
+// tail reaches out to the thumb rather than the whole bubble hanging off the
+// edge. The tail is the pivot, so the stylesheet has to move with this: the
+// element carries it as --nudge.
+const nudgeFor = (half: number, x: number, width: number, room: number) => {
+  const lo = half - room; // leftmost centre that fits
+  const hi = width + room - half; // rightmost centre that fits
+  // A body wider than the room it is given fits at neither end, so it takes the
+  // bound it is nearer and hangs off the other.
+  const centre =
+    lo <= hi ? Math.min(Math.max(x, lo), hi) : x < width / 2 ? lo : hi;
+  // The tail is drawn on the body, so it can never slide past its own edge.
+  return Math.min(Math.max(centre - x, -half), half);
+};
+
+const applyNudge = (bubble: HTMLElement, nudge: number) => {
+  bubble.style.setProperty("--nudge", `${nudge}px`);
+};
+
 const boxOf = (bubble: HTMLElement, kx: number, ky: number): Box => ({
   half: (bubble.offsetWidth / 2) * kx,
   top: -(TAIL + bubble.offsetHeight) * ky,
@@ -67,7 +105,7 @@ const boxOf = (bubble: HTMLElement, kx: number, ky: number): Box => ({
 // The body's box inset by its corner radius: a rounded rectangle is that box
 // swept by a disc, so two of them meet arc to arc once the boxes are 2 radii
 // apart. Swung about the tail tip, which sits at `x`.
-const cornersOf = (box: Box, tilt: number, x: number): Pt[] => {
+const cornersOf = (box: Box, tilt: number, x: number, nudge = 0): Pt[] => {
   const sin = Math.sin((tilt * Math.PI) / 180);
   const cos = Math.cos((tilt * Math.PI) / 180);
   const half = Math.max(box.half - RADIUS, 0);
@@ -76,10 +114,10 @@ const cornersOf = (box: Box, tilt: number, x: number): Pt[] => {
     y: px * sin + py * cos,
   });
   return [
-    at(-half, box.top + RADIUS),
-    at(half, box.top + RADIUS),
-    at(half, box.bottom - RADIUS),
-    at(-half, box.bottom - RADIUS),
+    at(nudge - half, box.top + RADIUS),
+    at(nudge + half, box.top + RADIUS),
+    at(nudge + half, box.bottom - RADIUS),
+    at(nudge - half, box.bottom - RADIUS),
   ];
 };
 
@@ -336,6 +374,7 @@ const SingleBubble = ({
     to: value,
     still: false,
     width: 0,
+    room: 0,
   });
 
   // Held in a ref because the motion loop reads its setup once, on mount.
@@ -354,6 +393,7 @@ const SingleBubble = ({
 
     const s = state.current;
     s.width = track.offsetWidth;
+    s.room = roomAround(track, s.width, 0);
     s.bob.x = atRef.current(s.play, s.width);
     s.bob.lag = s.bob.x;
 
@@ -386,10 +426,20 @@ const SingleBubble = ({
           setShown(s.play);
         }
 
+        const nudge = nudgeFor(
+          bubble.offsetWidth / 2,
+          s.bob.x,
+          s.width,
+          s.room,
+        );
+        applyNudge(bubble, nudge);
+
         anchor.style.transform = `translateX(${s.bob.x}px)`;
         bubble.style.transform = bubbleTransform(
           tiltOf(s.bob),
           stretchOf(s.bob),
+          0,
+          nudge,
         );
         fill.style.transform = `scaleX(${s.width ? s.bob.x / s.width : 0})`;
       },
@@ -415,6 +465,7 @@ const SingleBubble = ({
     const observer = new ResizeObserver(([entry]) => {
       const s = state.current;
       s.width = entry!.contentRect.width;
+      s.room = roomAround(track, s.width, 0);
       s.bob.x = atRef.current(s.play, s.width);
       // A reflow is not a drag - the bubble is carried, not thrown.
       rest(s.bob);
@@ -502,6 +553,7 @@ const RevealBubbles = ({
     upper,
     still: false,
     width: 0,
+    room: 0,
   });
 
   // Held in a ref because the motion loop reads its setup once, on mount.
@@ -519,6 +571,7 @@ const RevealBubbles = ({
 
     const s = state.current;
     s.width = track.offsetWidth;
+    s.room = roomAround(track, s.width, LEAN_ROOM);
     s.lo.x = atRef.current(s.lower, s.width);
     s.hi.x = atRef.current(s.upper, s.width);
     // Both start on the guess and spring out to their marks, so the reveal
@@ -561,24 +614,27 @@ const RevealBubbles = ({
         const hiStretch = stretchOf(s.hi);
         const loSwing = tiltOf(s.lo);
         const hiSwing = tiltOf(s.hi);
-        const loBox = boxOf(
-          loBubble,
-          scaleXof(loStretch, squash),
-          1 + loStretch,
-        );
-        const hiBox = boxOf(
-          hiBubble,
-          scaleXof(hiStretch, squash),
-          1 + hiStretch,
-        );
+        const loKx = scaleXof(loStretch, squash);
+        const hiKx = scaleXof(hiStretch, squash);
+        const loBox = boxOf(loBubble, loKx, 1 + loStretch);
+        const hiBox = boxOf(hiBubble, hiKx, 1 + hiStretch);
+
+        // Held inside the track first: at the ends a body slides along its own
+        // tail, which is daylight the pair no longer have to lean for.
+        const loShift = nudgeFor(loBox.half, s.lo.x, s.width, s.room);
+        const hiShift = nudgeFor(hiBox.half, s.hi.x, s.width, s.room);
+        // A squashed body only travels `kx` of what its transform asks for, so
+        // the shift written out is the one it needs divided back out.
+        const loNudge = loShift / loKx;
+        const hiNudge = hiShift / hiKx;
 
         // Both tails stay pinned to their marks, so leaning further is the only
         // way out of an overlap. Monotonic in `lean`, so a bisection finds the
         // shallowest one that still leaves SHOVE_CLEAR between the bodies.
         const gapAt = (lean: number) =>
           gapBetween(
-            cornersOf(loBox, loSwing - lean, s.lo.x),
-            cornersOf(hiBox, hiSwing + lean, s.hi.x),
+            cornersOf(loBox, loSwing - lean, s.lo.x, loShift),
+            cornersOf(hiBox, hiSwing + lean, s.hi.x, hiShift),
           );
 
         let lean = 0;
@@ -592,17 +648,22 @@ const RevealBubbles = ({
           lean = over;
         }
 
+        applyNudge(loBubble, loNudge);
+        applyNudge(hiBubble, hiNudge);
+
         lo.style.transform = `translateX(${s.lo.x}px)`;
         hi.style.transform = `translateX(${s.hi.x}px)`;
         loBubble.style.transform = bubbleTransform(
           loSwing - lean,
           loStretch,
           squash,
+          loNudge,
         );
         hiBubble.style.transform = bubbleTransform(
           hiSwing + lean,
           hiStretch,
           squash,
+          hiNudge,
         );
         fill.style.transform = `translateX(${s.lo.x}px) scaleX(${
           s.width ? (s.hi.x - s.lo.x) / s.width : 0
@@ -636,6 +697,7 @@ const RevealBubbles = ({
     const observer = new ResizeObserver(([entry]) => {
       const s = state.current;
       s.width = entry!.contentRect.width;
+      s.room = roomAround(track, s.width, LEAN_ROOM);
       s.lo.x = atRef.current(s.lower, s.width);
       s.hi.x = atRef.current(s.upper, s.width);
       rest(s.lo);

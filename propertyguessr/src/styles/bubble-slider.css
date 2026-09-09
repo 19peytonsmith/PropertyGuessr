@@ -12,8 +12,9 @@
 .bubble-slider {
   width: 100%;
   /* Top clears the bubble: 20px of tail and gap, then the bubble's own height.
-     Bottom clears the mark labels. Sides are the bubble's half-width, so it
-     cannot clip at either end of the track. */
+     Bottom clears the mark labels. Sides are room for the bubble to hang into
+     at the ends of the track - it stays inside whatever is given here, so a
+     narrow viewport can drop this to nothing and run the track full width. */
   padding: 3.25rem 3rem 2.25rem;
 }
 
@@ -101,8 +102,14 @@
     color-mix(in srgb, var(--btn-primary) 40%, transparent);
 }
 
-/* The pivot is the tail's tip, so the bubble swings from there. */
+/* The pivot is the tail's tip, so the bubble swings from there.
+
+   --nudge is how far BubbleSlider.tsx has slid the body off that tail to keep
+   it inside the track - nothing else may write it. The tail has to stay on the
+   thumb through the slide, so it and the pivot both walk back by the same
+   amount. */
 .bubble {
+  --nudge: 0px;
   position: absolute;
   /* 9px of tail, then the thumb's 9px radius, then 2px of daylight. */
   bottom: 1.25rem;
@@ -110,8 +117,8 @@
   padding: 0.3rem 0.6rem;
   border-radius: 0.75rem;
   background: var(--slider-track);
-  transform-origin: 50% calc(100% + 9px);
-  transform: translateX(-50%);
+  transform-origin: calc(50% - var(--nudge)) calc(100% + 9px);
+  transform: translateX(calc(-50% + var(--nudge)));
   white-space: nowrap;
   text-align: center;
   /* No strut. Torph's own stylesheet makes the value an inline-block aligned to
@@ -126,7 +133,7 @@
   content: "";
   position: absolute;
   top: 100%;
-  left: 50%;
+  left: calc(50% - var(--nudge));
   /* Its buried half sits under the value, not over it. */
   z-index: -1;
   width: 1rem;
@@ -231,9 +238,11 @@
 }
 
 @media (max-width: 640px) {
+  /* Full-bleed track: a phone has no width to spare on side padding, and the
+     bubble keeps itself inside the ends rather than needing room to hang into. */
   .bubble-slider {
-    padding-left: 2.5rem;
-    padding-right: 2.5rem;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .bubble-mark-label {
