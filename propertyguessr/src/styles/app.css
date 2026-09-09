@@ -331,15 +331,6 @@ html[data-theme="dark"] .exit-confirm {
     font-size: 0.8125rem;
     white-space: nowrap;
   }
-
-  /* The delta is a flourish that floats off, and there is no width on a phone
-     to hold open for it: lifted out of flow, it cannot shove the row wider for
-     the second it shows. */
-  .score-row .score-delta {
-    position: absolute;
-    top: 0;
-    left: 100%;
-  }
 }
 
 /* =================
